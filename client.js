@@ -125,16 +125,3 @@ function sendMessage(value) {
 process.on('exit', function() {
   socket.emit('leave', {room: room, user: username})
 });
-
-/* Utility */
-function filterUsers(users) {
-  var user_dict = {};
-  var filtered = [];
-  for (var i = 0; i < users.length; i++) {
-    if (!(users[i] in user_dict)) {
-      user_dict[users[i]] = users[i];
-      filtered.push(users[i]);
-    }
-  }
-  return filtered;
-}

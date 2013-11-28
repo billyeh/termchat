@@ -1,0 +1,14 @@
+{
+  "name": "termchat",
+  "description": "chat in the terminal!",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.x",
+    "socket.io": "x.9",
+    "socket.io-client": "x.9",
+    "prompt": "x.2",
+    "ansi": "x.2",
+    "blessed": "0.0.x"
+  }
+}

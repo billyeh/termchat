@@ -18,10 +18,10 @@ io.sockets.on('connection', function (socket) {
     } else {
       user_dict[data.room] = [data.user];
     }
-    socket.emit('user_list', {users: user_dict[data.room]});
     console.log('Request to join room ' + data.room + ' received from ' + data.user);
     io.sockets.in(data.room).emit('new_user', {user: data.user});
   });
+
   socket.on('leave', function (data) {
     socket.leave(data.room);
     if (data.room in user_dict) {
@@ -33,8 +33,14 @@ io.sockets.on('connection', function (socket) {
     console.log('Request to leave room ' + data.room + ' received from ' + data.user);
     io.sockets.in(data.room).emit('leave_user', {user: data.user});
   });
+
   socket.on('message', function(data) {
     console.log('Message ' + data.msg + ' received from ' + data.user);
     io.sockets.in(data.room).emit('new_message', {user: data.user, msg: data.msg});
+  });
+
+  socket.on('get_users', function(data) {
+    console.log('User list request for room ' + data.room + ' received');
+    socket.emit('user_list', {users: user_dict[data.room]});
   });
 });

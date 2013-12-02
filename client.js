@@ -1,79 +1,82 @@
 var io = require('socket.io-client')
   , prompt = require('prompt')
   , readline = require('readline')
-  , blessed = require('blessed');
+  , blessed = require('blessed')
+  , addon = require('./build/Release/pixelr');;
 
 var socket
   , username
-  , users
-  , room = process.argv[2]
-  , screen
+  , room = ''
+  , win
   , box
   , input;
 
-if (!(!!room)) {
-  console.log('Please specify a room to join or create as the first argument.');
-  process.exit();
-}
-start();
+main();
 
-function start() {
+function main() {
+  console.log(addon.read("image.jpeg"));
   prompt.message = "";
   prompt.delimiter = "";
   prompt.start();
-  prompt.get({
+  prompt.get(
+  {
     properties: {
       name: {
-        description: "Welcome! Please enter a username:".magenta
+        description: "Welcome! Enter a username (e.g. e-mail if you want to connect with people you know):".magenta
       }
     }
-  }, function (err, result) {
-    username = result.name;
-    getRoom();
-  });
+  }, checkName);
 }
 
-function getRoom() {
+function checkName(err, result) {
+  if (err) {
+    console.log('Error encountered logging you in');
+  }
+  else {
+    username = result.name;
+    joinRoom();
+  }
+}
+
+function joinRoom() {
   socket = io.connect('http://localhost:8000/');
   socket.on('connect', function(data) {
     socket.emit('connection');
     socket.emit('join', {room: room, user: username});
-    socket.on('user_list', function(data) {
-      users = data.users;
-      newUser(socket);
-      leaveUser(socket);
-      getMessages(socket);
-      getUserInput();
-    });
+    listen(socket);
+    getUserInput();
   });
 }
 
-function newUser(socket) {
+function listen(socket) {
+  socket.on('user_list', function(data) {
+    writeMessage('Current users: ' + JSON.stringify(data.users) + '\n');
+  });
   socket.on('new_user', function(data) {
     writeMessage(data.user + ' has joined the room.\n');
   });
-}
-
-function leaveUser(socket) {
   socket.on('leave_user', function(data) {
     writeMessage(data.user + ' has left the room.\n');
   });
-}
-
-function getMessages(socket) {
   socket.on('new_message', function(data) {
     writeMessage(data.user + ': ' + data.msg + '\n');
   });
 }
 
 function getUserInput() {
-  screen = blessed.screen();
-  box = blessed.box({
+  win = blessed.screen();
+  win.on('keypress', function() {
+    input.focus();
+  });
+  box = blessed.scrollablebox({
     left: 'center',
     width: '100%',
     height: '90%',
+    content: 'Welcome! Type /help at any time to see valid commands. Happy chatting!\n',
     tags: true,
+    mouse: true,
     scrollable: true,
+    label: 'tskype',
     border: {
       type: 'line'
     }
@@ -91,37 +94,63 @@ function getUserInput() {
     }
   });
 
-  screen.append(box);
-  screen.append(input);
-  screen.key(['escape', 'q', 'C-c'], function(ch, key) {
+  win.append(box);
+  win.append(input);
+  input.key(['escape', 'C-c'], function(ch, key) {
     return process.exit(0);
   });
   input.setValue('> ');
-  input.focus();
   input.on('submit', sendMessage);
-  screen.render();
+  input.focus();
+  win.render();
 }
 
 function writeMessage(contents, color) {
-  if (box) {
-    box.setContent(box.getContent() + contents);
-  }
-  if (screen) {
-    screen.render();
-  }
-  input.focus();
+  input.setValue('> ');
+  box.setContent(box.getContent() + contents);
+  box.setScrollPerc(100);
+  win.render();
 }
 
 function sendMessage(value) {
   var words = value.split(' ');
   value = words.slice(1, words.length).join(' ');
-  if (!value) {
+  if (!(!!value)) {
     return;
   }
-  input.setValue('> ');
-  socket.emit('message', {room: room, user: username, msg: value});
+  if (value.substring(0, 1) === '/' && value.substring(1, 2) !== '/') {
+    var command = value.split(' ')[0].substring(1, value.split(' ')[0].length);
+    var args = value.split(' ').slice(1, value.split(' ').length).join(' ');
+    var helpMessage = parseHelp(command, args);
+    if (helpMessage) {
+      writeMessage(helpMessage);
+    }
+  }
+  else if (value.substring(0, 1) === '/') {
+    socket.emit('message', {room: room, user: username, msg: value.substring(1, value.length)});
+  }
+  else {
+    socket.emit('message', {room: room, user: username, msg: value});
+  }
+}
+
+function parseHelp(command, args) {
+  switch(command) {
+    case 'help': 
+      return 'To send a message starting with \'/\', ' + 
+              'type \'//\'.\nA list of valid commands:\n' +
+              '/help: display this help message\n' +
+              '/users: display a list of users in the room\n';
+    case 'users': 
+      socket.emit('get_users', {room: room});
+      return false;
+    default:
+      return 'Command \'' + command + '\' not recognized. Enter /help for commands.\n'; 
+  }
 }
 
 process.on('exit', function() {
-  socket.emit('leave', {room: room, user: username})
+  if (socket) {
+    socket.emit('leave', {room: room, user: username});
+  }
 });

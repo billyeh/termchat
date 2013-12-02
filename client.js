@@ -2,7 +2,7 @@ var io = require('socket.io-client')
   , prompt = require('prompt')
   , readline = require('readline')
   , blessed = require('blessed')
-  , addon = require('./build/Release/pixelr');;
+  , pixelr = require('pixelr');
 
 var socket
   , username
@@ -14,7 +14,6 @@ var socket
 main();
 
 function main() {
-  console.log(addon.read("image.jpeg"));
   prompt.message = "";
   prompt.delimiter = "";
   prompt.start();

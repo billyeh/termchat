@@ -9,6 +9,6 @@
     "socket.io-client": "x.9",
     "prompt": "x.2",
     "blessed": "0.0.x",
-    "get-pixels": "1.0.x"
+    "pixelr": "0.0.x"
   }
 }

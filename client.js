@@ -139,10 +139,24 @@ function parseHelp(command, args) {
       return 'To send a message starting with \'/\', ' + 
               'type \'//\'.\nA list of valid commands:\n' +
               '/help: display this help message\n' +
-              '/users: display a list of users in the room\n';
-    case 'users': 
+              '/users: display a list of users in the room\n' +
+              '/chat {username}: enter a private chatroom with someone\n' +
+              '/video {username}: enter a video call with someone\n';
+    case 'users':
       socket.emit('get_users', {room: room});
       return false;
+    case 'chat':
+      if (!args.split(' ')[0]) {
+        return 'Enter a username to chat with after the /chat command.\n';
+      }
+      socket.emit('chat_request', {user: username, other: args.split(' ')[0]});
+      return 'Chatting ' + args.split(' ')[0] + '...\n';
+    case 'video':
+      if (!args.split(' ')[0]) {
+        return 'Enter a username to video chat with after the /video command.\n';
+      }
+      socket.emit('video_request', {user: username, other: args.split(' ')[0]});
+      return 'Calling ' + args.split(' ')[0] + '...\n';
     default:
       return 'Command \'' + command + '\' not recognized. Enter /help for commands.\n'; 
   }

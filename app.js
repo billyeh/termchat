@@ -26,12 +26,13 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
-  socket.on('join', join);
-  socket.on('leave', leave);
+  socket.on('join', joinRoom);
+  socket.on('leave', leaveRoom);
 
   socket.on('message', function(data) {
+    console.log(io.sockets.manager.rooms);
     console.log('Message ' + data.msg + ' received from ' + data.user + ' to room ' + data.room);
-    io.sockets.in('/' + data.room).emit('new_message', {user: data.user, msg: data.msg});
+    io.sockets.in(data.room).emit('new_message', {user: data.user, msg: data.msg});
   });
 
   socket.on('get_users', function(data) {
@@ -62,7 +63,6 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('accept', function(data) {
-    console.log(data.user + ' accepting ' + data.other + '\'s chat request.');
     if (!(data.other in users)) {
       console.log('Accepted chat but ' + data.other + ' is not in ' + users);
       socket.emit('no_user', {user: data.other});
@@ -79,8 +79,11 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-function join(data) {
-  this.join(data.room);
+function joinRoom(data, socket) {
+  if (!socket) {
+    var socket = this;
+  }
+  socket.join(data.room);
   if (data.room in rooms) {
     rooms[data.room].push(data.user);
   }
@@ -88,36 +91,51 @@ function join(data) {
     rooms[data.room] = [data.user];
   }
   console.log('Request to join room ' + data.room + ' received from ' + data.user);
-  users[data.user] = this;
+  users[data.user] = socket;
   io.sockets.in(data.room).emit('new_user', {user: data.user});
 }
 
-function leave(data) {
-  this.leave(data.room);
-  if (data.room in rooms) {
-    var index = rooms[data.room].indexOf(data.user);
+function leaveRoom(data, socket) {
+  if (!socket) {
+    var socket = this;
+  }
+  socket.leave(data.room);
+  if (data.room.replace('/', '') in rooms) {
+    var index = rooms[data.room.replace('/', '')].indexOf(data.user);
     if (index > -1) {
-      rooms[data.room].splice(index, 1);
+      rooms[data.room.replace('/', '')].splice(index, 1);
     }
   }
   console.log('Request to leave room ' + data.room + ' received from ' + data.user);
-  delete users[data.user];
+  if (data.room === '' || data.room === '/') {
+    delete users[data.user];
+  }
   delete requests['chat'][data.user];
   delete requests['video'][data.user];
-  io.sockets.in(data.room).emit('leave_user', {user: data.user});
+  io.sockets.in(data.room.replace('/', '')).emit('leave_user', {user: data.user});
 }
 
 function startChat(u1, u2) {
+  var u1Room = Object.keys(io.sockets.manager.roomClients[users[u1].id]).filter(notDefaultRoom)[0];
+  var u2Room = Object.keys(io.sockets.manager.roomClients[users[u2].id]).filter(notDefaultRoom)[0];
+  if (u1Room) {
+    leaveRoom({room: u1Room, user: u1}, users[u1]);
+  }
+  if (u2Room) {
+    leaveRoom({room: u2Room, user: u2}, users[u2]);
+  }
   console.log('Starting chat for ' + u1 + ' and ' + u2);
-  var u1Room = Object.keys(io.sockets.manager.roomClients[users[u1].id])[0];
-  var u2Room = Object.keys(io.sockets.manager.roomClients[users[u2].id])[0];
   delete requests['chat'][u2];
-  users[u1].join({room: u1 + u2, user: u1});
-  users[u2].join({room: u1 + u2, user: u2});
+  joinRoom({room: u1 + u2, user: u1}, users[u1]);
+  joinRoom({room: u1 + u2, user: u2}, users[u2]);
   users[u1].emit('new_room', {room: u1 + u2, user: u2});
   users[u2].emit('new_room', {room: u1 + u2, user: u1});
 }
 
 function startVideo(u1, u2) {
   console.log('Starting video for ' + u1 + ' and ' + u2); 
+}
+
+function notDefaultRoom(room) {
+  return room !== '' && room !== '/';
 }

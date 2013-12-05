@@ -39,7 +39,7 @@ function getName() {
   {
     properties: {
       name: {
-        description: 'Welcome! Enter a username (e.g. e-mail if you want ' + 
+        description: 'Welcome! Enter a username (e.g. e-mail if you want '.magenta + 
                      'to connect with people you know):'.magenta
       }
     }
@@ -133,14 +133,17 @@ function getUserInput() {
 function writeMessage(contents, color) {
   input.setValue('> ');
   box.setContent(box.getContent() + contents);
-  box.setScrollPerc(100);
+  if (box.getContent().split('\n').length > win.height / 2) {
+    box.setScrollPerc(100);
+  }
   win.render();
 }
 
 function sendMessage(value) {
-  var words = value.split(' ');
-  if (value[0] === '>') { value = words.slice(1, words.length).join(' '); }
-  if (!(!!value)) { return; }
+  value = value.trim();
+  if (value.substring(0, 1) === '>') { 
+    value = value.substring(1).trim();
+  }
   if (value.substring(0, 1) === '/' && value.substring(1, 2) !== '/') {
     var command = value.split(' ')[0].substring(1, value.split(' ')[0].length);
     var args = value.split(' ').slice(1, value.split(' ').length).join(' ');
@@ -193,5 +196,6 @@ function parseHelp(command, args) {
 process.on('exit', function() {
   if (socket) {
     socket.emit('leave', {room: room, user: username});
+    socket.emit('leave', {room: '', user: username});
   }
 });

@@ -62,7 +62,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('accept', function(data) {
-    console.log(data.user ' accepting ' + data.other + '\'s chat request.');
+    console.log(data.user + ' accepting ' + data.other + '\'s chat request.');
     if (!(data.other in users)) {
       console.log('Accepted chat but ' + data.other + ' is not in ' + users);
       socket.emit('no_user', {user: data.other});

@@ -45,6 +45,9 @@ io.sockets.on('connection', function (socket) {
     if (!(data.other in users)) {
       socket.emit('no_user', {user: data.other});
     }
+    if (data.user === data.other) {
+      socket.emit('check_urself');
+    }
     else {
       requests['chat'][data.user] = data.other;
       users[data.other].emit('chat?', {user: data.user});

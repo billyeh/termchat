@@ -82,6 +82,9 @@ function listen() {
   socket.on('no_request', function(data) {
     writeMessage('There are no chat requests to accept right now.\n');
   });
+  socket.on('check_urself', function(data) {
+    writeMessage('You can\'t chat with yourself, sorry.\n');
+  });
   socket.on('new_room', function(data) {
     room = data.room;
     writeMessage('You\'ve entered a chat room with ' + data.user + '!\n');

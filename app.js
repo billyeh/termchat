@@ -30,7 +30,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('leave', leave);
 
   socket.on('message', function(data) {
-    console.log('Message ' + data.msg + ' received from ' + data.user);
+    console.log('Message ' + data.msg + ' received from ' + data.user + ' to room ' + data.room);
     io.sockets.in(data.room).emit('new_message', {user: data.user, msg: data.msg});
   });
 

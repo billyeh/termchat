@@ -5,7 +5,7 @@ var app = require('express')()
 server.listen(process.env.VMC_APP_PORT || 8000);
 
 app.get('/', function (req, res) {
-  res.sendfile(__dirname + '/index.html');
+  res.sendfile('/index.html');
 });
 
 // rooms[room_name] = [user1, user2, ...]

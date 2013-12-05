@@ -1,6 +1,5 @@
 var io = require('socket.io-client')
   , prompt = require('prompt')
-  , readline = require('readline')
   , blessed = require('blessed')
   , pixelr = require('pixelr');
 
@@ -16,7 +15,7 @@ main();
 
 function main() {
   getName();
-  socket = io.connect('http://localhost:8000/');
+  socket = io.connect('http://termchat.hp.af.cm/');//'http://localhost:8000/');
   socket.on('connect', function(data) {
     socket.emit('connection');
   });

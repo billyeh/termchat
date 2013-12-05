@@ -39,7 +39,8 @@ function getName() {
   {
     properties: {
       name: {
-        description: "Welcome! Enter a username (e.g. e-mail if you want to connect with people you know):".magenta
+        description: 'Welcome! Enter a username (e.g. e-mail if you want ' + 
+                     'to connect with people you know):'.magenta
       }
     }
   }, checkName);

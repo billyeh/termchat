@@ -31,7 +31,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('message', function(data) {
     console.log('Message ' + data.msg + ' received from ' + data.user + ' to room ' + data.room);
-    io.sockets.in(data.room).emit('new_message', {user: data.user, msg: data.msg});
+    io.sockets.in('/' + data.room).emit('new_message', {user: data.user, msg: data.msg});
   });
 
   socket.on('get_users', function(data) {

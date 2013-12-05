@@ -2,10 +2,10 @@ var app = require('express')()
   , server = require('http').createServer(app)
   , io = require('socket.io').listen(server);
 
-server.listen(process.env.VMC_APP_PORT || 8000);
+server.listen(process.env.PORT || 8000);
 
 app.get('/', function (req, res) {
-  res.sendfile('/index.html');
+  res.sendfile(__dirname + '/index.html');
 });
 
 // rooms[room_name] = [user1, user2, ...]

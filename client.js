@@ -15,7 +15,7 @@ main();
 
 function main() {
   getName();
-  socket = io.connect('http://termchat.hp.af.cm/');//'http://localhost:8000/');
+  socket = io.connect('http://safe-eyrie-8054.herokuapp.com/');
   socket.on('connect', function(data) {
     socket.emit('connection');
   });

@@ -9,13 +9,14 @@ var socket
   , room = ''
   , win
   , box
-  , input;
+  , input
+  , video;
 
 main();
 
 function main() {
   getName();
-  socket = io.connect('http://safe-eyrie-8054.herokuapp.com/');
+  socket = io.connect('http://localhost:8000');//'http://safe-eyrie-8054.herokuapp.com/');
   socket.on('connect', function(data) {
     socket.emit('connection');
   });
@@ -47,8 +48,10 @@ function getName() {
 }
 
 function checkName(err, result) {
-  username = result.name;
-  socket.emit('check_name', {name: result.name});
+  if (!err) {
+    username = result.name;
+    socket.emit('check_name', {name: result.name});
+  }
 }
 
 function listen() {
@@ -79,15 +82,13 @@ function listen() {
     writeMessage('Tried chatting with ' + data.user + ', but they are not on termchat.\n' + 
                  'Type /users to see who\'s on termchat right now.\n');
   });
-  socket.on('no_request', function(data) {
-    writeMessage('There are no chat requests to accept right now.\n');
-  });
-  socket.on('check_urself', function(data) {
-    writeMessage('You can\'t chat with yourself, sorry.\n');
-  });
   socket.on('new_room', function(data) {
     room = data.room;
     writeMessage('You\'ve entered a chat room with ' + data.user + '!\n');
+  });
+  socket.on('send_video', function(data) {
+    receiveVideo();
+    sendVideo(data);
   });
 }
 
@@ -97,7 +98,7 @@ function getUserInput() {
     input.focus();
   });
   box = blessed.scrollablebox({
-    left: 'center',
+    left: '0',
     width: '100%',
     height: '90%',
     content: 'Welcome! Type /help at any time to see valid commands. Happy chatting!\n',
@@ -110,7 +111,7 @@ function getUserInput() {
     }
   });
   input = blessed.textbox({
-    left: 'center',
+    left: '0',
     width: '100%',
     height: '10%',
     top: '90%',
@@ -177,11 +178,17 @@ function parseHelp(command, args) {
       if (!args.split(' ')[0]) {
         return 'Enter a username to chat with after the /chat command.\n';
       }
+      if (args.split(' ')[0] === username) {
+        return 'You can\'t chat with yourself, sorry!\n';
+      }
       socket.emit('chat_request', {user: username, other: args.split(' ')[0]});
       return 'Requesting to chat with ' + args.split(' ')[0] + '...\n';
     case 'video':
       if (!args.split(' ')[0]) {
         return 'Enter a username to video chat with after the /video command.\n';
+      }
+      if (args.split(' ')[0] === username) {
+        return 'You can\'t chat with yourself, sorry!\n';
       }
       socket.emit('video_request', {user: username, other: args.split(' ')[0]});
       return 'Requesting video call with ' + args.split(' ')[0] + '...\n';
@@ -196,9 +203,36 @@ function parseHelp(command, args) {
   }
 }
 
-process.on('exit', function() {
-  if (socket) {
-    socket.emit('leave', {room: room, user: username});
-    socket.emit('leave', {room: '', user: username});
+function receiveVideo() {
+  if (win.height < 39 || win.width < 150) {
+    writeMessage('You need your terminal to be at least 150 characters wide ' + 
+                 'and 39 characters tall to display video\n');
   }
+  else {
+    box.width = '50%';
+    input.width = '50%';
+    video = blessed.box({
+      left: '50%',
+      width: '50%',
+      height: '100%',
+      tags: true,
+      border: {
+        type: 'line'
+      }
+    });
+    win.append(video);
+    win.render();
+  }
+  socket.on('receive_frame', function(data) {
+
+  });
+}
+
+function sendVideo(data) {
+  socket.emit('send_frame', {user: username, other: data.other});
+}
+
+process.on('exit', function() {
+  socket.emit('leave', {room: room, user: username});
+  socket.emit('leave', {room: '', user: username});
 });

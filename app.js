@@ -18,7 +18,7 @@ requests = {'chat': {}, 'video': {}};
 io.sockets.on('connection', function (socket) {
   socket.on('check_name', function(data) {
     console.log('Validation request for ' + data.name + ': ' + (data.name in users).toString());
-    if (data.name in users) {
+    if (data.name in users || data.name.length < 1) {
       socket.emit('validation', {valid: 'invalid', user: data.name});
     }
     else {
@@ -43,9 +43,6 @@ io.sockets.on('connection', function (socket) {
     console.log('Request to chat ' + data.other + ' from ' + data.user);
     if (!(data.other in users)) {
       socket.emit('no_user', {user: data.other});
-    }
-    if (data.user === data.other) {
-      socket.emit('check_urself');
     }
     else {
       requests['chat'][data.user] = data.other;
@@ -75,13 +72,11 @@ io.sockets.on('connection', function (socket) {
     else if (data.other in requests['video']) {
       startVideo(data.user, data.other);
     }
-    else {
-      socket.emit('no_request', {user: data.other});
-    }
   });
 });
 
 function joinRoom(data, socket) {
+  console.log('Request to join room ' + data.room + ' received from ' + data.user);
   if (!socket) {
     var socket = this;
   }
@@ -92,12 +87,12 @@ function joinRoom(data, socket) {
   else {
     rooms[data.room] = [data.user];
   }
-  console.log('Request to join room ' + data.room + ' received from ' + data.user);
   users[data.user] = socket;
   io.sockets.in(data.room).emit('new_user', {user: data.user});
 }
 
 function leaveRoom(data, socket) {
+  console.log('Request to leave room ' + data.room + ' received from ' + data.user);
   if (!socket) {
     var socket = this;
   }
@@ -108,7 +103,6 @@ function leaveRoom(data, socket) {
       rooms[data.room.replace('/', '')].splice(index, 1);
     }
   }
-  console.log('Request to leave room ' + data.room + ' received from ' + data.user);
   if (data.room === '' || data.room === '/') {
     delete users[data.user];
   }
@@ -118,6 +112,7 @@ function leaveRoom(data, socket) {
 }
 
 function startChat(u1, u2) {
+  console.log('Starting chat for ' + u1 + ' and ' + u2);
   var u1Room = Object.keys(io.sockets.manager.roomClients[users[u1].id]).filter(notDefaultRoom)[0];
   var u2Room = Object.keys(io.sockets.manager.roomClients[users[u2].id]).filter(notDefaultRoom)[0];
   if (u1Room) {
@@ -126,7 +121,6 @@ function startChat(u1, u2) {
   if (u2Room) {
     leaveRoom({room: u2Room, user: u2}, users[u2]);
   }
-  console.log('Starting chat for ' + u1 + ' and ' + u2);
   delete requests['chat'][u2];
   joinRoom({room: u1 + u2, user: u1}, users[u1]);
   joinRoom({room: u1 + u2, user: u2}, users[u2]);
@@ -135,7 +129,10 @@ function startChat(u1, u2) {
 }
 
 function startVideo(u1, u2) {
-  console.log('Starting video for ' + u1 + ' and ' + u2); 
+  console.log('Starting video for ' + u1 + ' and ' + u2);
+  startChat(u1, u2);
+  users[u1].emit('send_video', {other: u2});
+  users[u2].emit('send_video', {other: u1});
 }
 
 function notDefaultRoom(room) {

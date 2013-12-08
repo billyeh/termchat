@@ -76,7 +76,9 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('send_frame', function(data) {
     console.log('Frame received from ' + data.user + ' to ' + data.other);
-    users[data.other].emit('receive_frame', {pixels: data.pixels});
+    if (users[data.other]) {
+      users[data.other].emit('receive_frame', {pixels: data.pixels});
+    }
   });
 });
 

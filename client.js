@@ -18,7 +18,7 @@ main();
 
 function main() {
   getName();
-  socket = io.connect('http://localhost:8000');//'http://safe-eyrie-8054.herokuapp.com/');
+  socket = io.connect('http://safe-eyrie-8054.herokuapp.com/');
   socket.on('connect', function(data) {
     socket.emit('connection');
   });
@@ -226,17 +226,13 @@ function receiveVideo() {
     win.render();
   }
   socket.on('receive_frame', function(data) {
-    video.setContent(data.pixels);
+    video.setContent(video.getContent() + data.pixels);
   });
 }
 
 function sendVideo(data) {
   setInterval(function() {
     execute('streamer -o image.jpeg', function(error, stdout, stderr) {
-      if (error) {
-        writeMessage(error);
-        return;
-      }
       pixelr.read('image.jpeg', 'jpeg', function(pixels) {
         socket.emit('send_frame', {user: username, other: data.other, pixels: asciize(pixels)});
       });

@@ -73,6 +73,11 @@ io.sockets.on('connection', function (socket) {
       startVideo(data.user, data.other);
     }
   });
+
+  socket.on('send_frame', function(data) {
+    console.log('Frame received from ' + data.user + ' to ' + data.other);
+    users[data.other].emit('receive_frame', {pixels: data.pixels});
+  });
 });
 
 function joinRoom(data, socket) {

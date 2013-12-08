@@ -1,7 +1,8 @@
 var io = require('socket.io-client')
   , prompt = require('prompt')
   , blessed = require('blessed')
-  , pixelr = require('pixelr');
+  , pixelr = require('pixelr')
+  , execute = require('child_process').exec;
 
 var socket
   , username
@@ -10,7 +11,8 @@ var socket
   , win
   , box
   , input
-  , video;
+  , video
+  , videoInterval;
 
 main();
 
@@ -224,12 +226,26 @@ function receiveVideo() {
     win.render();
   }
   socket.on('receive_frame', function(data) {
-
+    video.setContent(data.pixels);
   });
 }
 
 function sendVideo(data) {
-  socket.emit('send_frame', {user: username, other: data.other});
+  setInterval(function() {
+    execute('streamer -o image.jpeg', function(error, stdout, stderr) {
+      if (error) {
+        writeMessage(error);
+        return;
+      }
+      pixelr.read('image.jpeg', 'jpeg', function(pixels) {
+        socket.emit('send_frame', {user: username, other: data.other, pixels: asciize(pixels)});
+      });
+    })
+  }, 200);
+}
+
+function asciize(pixels) {
+  return '#####################\n';
 }
 
 process.on('exit', function() {

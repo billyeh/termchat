@@ -8,7 +8,7 @@
     "socket.io-client": "x.9",
     "prompt": "x.2",
     "blessed": "0.0.x",
-    "pixelr": "0.0.x"
+    "pixelr": "0.1.x"
   },
   "engines": {
     "node": "0.10.x",

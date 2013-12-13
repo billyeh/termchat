@@ -66,7 +66,7 @@ function client() {
       writeMessage(data.user + ' has left the room.\n');
     });
     socket.on('new_message', function(data) {
-      writeMessage(data.user + ': ' + data.msg + '\n');
+      writeMessage('{bold}' + data.user + '{/bold}: ' + data.msg + '\n', false);
     });
     socket.on('chat?', function(data) {
       other = data.user;
@@ -98,11 +98,12 @@ function client() {
     win.on('keypress', function() {
       input.focus();
     });
+    
     box = blessed.scrollablebox({
       left: '0',
       width: '100%',
       height: '90%',
-      content: 'Welcome! Type /help at any time to see valid commands. Happy chatting!\n',
+      content: 'Type /help at any time to see valid commands.\n',
       tags: true,
       mouse: true,
       scrollable: true,
@@ -124,6 +125,11 @@ function client() {
       }
     });
 
+    if (win.height <= 30) {
+      writeMessage('This program works better if your terminal screen' +
+                   ' is taller than 30 characters');
+    }
+
     win.append(box);
     win.append(input);
     input.key(['escape', 'C-c'], function(ch, key) {
@@ -135,7 +141,10 @@ function client() {
     win.render();
   }
 
-  function writeMessage(contents, color) {
+  function writeMessage(contents, useColor) {
+    if (!(useColor === false)) {
+      contents = '{blue-fg}' + contents + '{/blue-fg}';
+    }
     input.setValue('> ');
     box.setContent(box.getContent() + contents);
     if (box.getContent().split('\n').length > win.height / 2) {

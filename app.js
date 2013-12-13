@@ -17,7 +17,7 @@ requests = {'chat': {}, 'video': {}};
 
 io.sockets.on('connection', function (socket) {
   socket.on('check_name', function(data) {
-    console.log('Validation request for ' + data.name + ': ' + (data.name in users).toString());
+    console.log('Validation request for ' + data.name);
     if (data.name in users || data.name.length < 1) {
       socket.emit('validation', {valid: 'invalid', user: data.name});
     }
@@ -27,6 +27,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('join', joinRoom);
+
   socket.on('leave', leaveRoom);
 
   socket.on('message', function(data) {
@@ -52,7 +53,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('video_request', function(data) {
     console.log('Request to video chat ' + data.other + ' from ' + data.user);
-    if (!users[data.other]) {
+    if (!(data.other in users)) {
       socket.emit('no_user', {user: data.other});
     }
     else {
@@ -144,4 +145,30 @@ function startVideo(u1, u2) {
 
 function notDefaultRoom(room) {
   return room !== '' && room !== '/';
+}
+
+
+// This really shouldn't even be necessary...
+// Have to figure out why process.on('exit') isn't always triggered on client side
+setInterval(purgeUsers, 3600000);
+
+function purgeUsers() {
+  console.log('Purging disconnected users...');
+  var user;
+  var room;
+  var index;
+  for (user in users) {
+    if (users[user].connected) {
+      continue;
+    }
+    delete users[user];
+    delete requests['chat'][user];
+    delete requests['video'][user];
+    for (room in rooms) {
+      index = rooms[room].indexOf(user);
+      if (index > -1) {
+        rooms[room].splice(index, 1);
+      }
+    }
+  }
 }

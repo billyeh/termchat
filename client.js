@@ -14,7 +14,8 @@ function client() {
     , box
     , input
     , video
-    , videoInterval;
+    , videoInterval
+    , scrollLock = false;
 
   getName();
   socket = io.connect('http://safe-eyrie-8054.herokuapp.com/');
@@ -125,11 +126,6 @@ function client() {
       }
     });
 
-    if (win.height <= 30) {
-      writeMessage('This program works better if your terminal screen' +
-                   ' is taller than 30 characters');
-    }
-
     win.append(box);
     win.append(input);
     input.key(['escape', 'C-c'], function(ch, key) {
@@ -142,13 +138,18 @@ function client() {
   }
 
   function writeMessage(contents, useColor) {
+    var scrollHeight, setHeight;
+    if (scrollLock) {
+      scrollHeight = box.getScrollPerc();
+    }
     if (!(useColor === false)) {
       contents = '{blue-fg}' + contents + '{/blue-fg}';
     }
     input.setValue('> ');
-    box.setContent(box.getContent() + contents);
-    if (box.getContent().split('\n').length > win.height / 2) {
-      box.setScrollPerc(100);
+    box.setContent(box.getContent() + contents + scrollHeight);
+    if (box.getContent().split('\n').length > win.height) {
+      setHeight = scrollLock ? scrollHeight : 100;
+      box.setScrollPerc(setHeight);
     }
     win.render();
   }
@@ -180,7 +181,8 @@ function client() {
                 '/users: display a list of users in the room\n' +
                 '/chat {username}: enter a chatroom with someone\n' +
                 '/video {username}: enter a video call with someone\n' +
-                '/y: accept the last chat or video request you received\n';
+                '/y: accept the last chat or video request you received\n' + 
+                '/scroll: toggle scroll lock\n';
       case 'users':
         socket.emit('get_users', {room: room});
         return '';
@@ -208,6 +210,9 @@ function client() {
         }
         socket.emit('accept', {user: username, other: other});
         return '';
+      case 'scroll':
+        scrollLock = !scrollLock;
+        return 'Scroll lock is now ' + scrollLock + '\n';
       default:
         return 'Command \'' + command + '\' not recognized. Enter /help for commands.\n';
     }
@@ -242,15 +247,20 @@ function client() {
   function sendVideo(data) {
     videoInterval = setInterval(function() {
       execute('streamer -o image.jpeg', function(error, stdout, stderr) {
-        pixelr.read('image.jpeg', 'jpeg', function(pixels) {
-          socket.emit('send_frame', {user: username, other: data.other, pixels: asciize(pixels)});
-        });
-      })
+        if (error) {
+          writeMessage('Error capturing video: ' + stderr);
+          return;
+        }
+        try {
+          pixelr.read('image.jpeg', 'jpeg', function(image) {
+            socket.emit('send_frame', {user: username, other: data.other, pixels: asciize(image)});
+          });
+        }
+        catch(err) {
+          writeMessage('Error reading video: ' + err);
+        }
+      });
     }, 150);
-  }
-
-  function asciize(pixels) {
-    return '#####################\n';
   }
 
   process.on('exit', function() {

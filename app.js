@@ -81,6 +81,15 @@ io.sockets.on('connection', function (socket) {
       users[data.other].emit('receive_frame', {pixels: data.pixels});
     }
   });
+
+  socket.on('disconnect', function(data) {
+    console.log('Disconnecting socket with id ' + this.id);
+    for (user in users) {
+      if (users[user] === this) {
+        leaveRoom({user: user, room: '/'}, this);
+      }
+    }
+  });
 });
 
 function joinRoom(data, socket) {
@@ -145,30 +154,4 @@ function startVideo(u1, u2) {
 
 function notDefaultRoom(room) {
   return room !== '' && room !== '/';
-}
-
-
-// This really shouldn't even be necessary...
-// Have to figure out why process.on('exit') isn't always triggered on client side
-setInterval(purgeUsers, 3600000);
-
-function purgeUsers() {
-  console.log('Purging disconnected users...');
-  var user;
-  var room;
-  var index;
-  for (user in users) {
-    if (users[user].connected) {
-      continue;
-    }
-    delete users[user];
-    delete requests['chat'][user];
-    delete requests['video'][user];
-    for (room in rooms) {
-      index = rooms[room].indexOf(user);
-      if (index > -1) {
-        rooms[room].splice(index, 1);
-      }
-    }
-  }
 }

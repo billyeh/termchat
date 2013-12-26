@@ -2,7 +2,8 @@ var io = require('socket.io-client')
   , prompt = require('prompt')
   , blessed = require('blessed')
   , pixelr = require('pixelr')
-  , execute = require('child_process').exec;
+  , execute = require('child_process').exec
+  , asciize = require('./asciize').asciize;
 
 var socket
   , username

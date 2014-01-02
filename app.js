@@ -95,7 +95,7 @@ io.sockets.on('connection', function (socket) {
 function joinRoom(data, socket) {
   console.log('Request to join room ' + data.room + ' received from ' + data.user);
   if (!socket) {
-    var socket = this;
+    socket = this;
   }
   socket.join(data.room);
   if (data.room in rooms) {
@@ -109,13 +109,15 @@ function joinRoom(data, socket) {
 }
 
 function leaveRoom(data, socket) {
+  var index;
+
   console.log('Request to leave room ' + data.room + ' received from ' + data.user);
   if (!socket) {
     socket = this;
   }
   socket.leave(data.room);
   if (data.room.replace('/', '') in rooms) {
-    var index = rooms[data.room.replace('/', '')].indexOf(data.user);
+    index = rooms[data.room.replace('/', '')].indexOf(data.user);
     if (index > -1) {
       rooms[data.room.replace('/', '')].splice(index, 1);
     }
@@ -129,10 +131,13 @@ function leaveRoom(data, socket) {
 }
 
 function startChat(u1, u2) {
+  var u1Room
+    , u2Room;
+
   console.log('Starting chat for ' + u1 + ' and ' + u2);
   // users apparently cannot leave the '' and '/' default rooms
-  var u1Room = Object.keys(io.sockets.manager.roomClients[users[u1].id]).filter(notDefaultRoom)[0];
-  var u2Room = Object.keys(io.sockets.manager.roomClients[users[u2].id]).filter(notDefaultRoom)[0];
+  u1Room = Object.keys(io.sockets.manager.roomClients[users[u1].id]).filter(notDefaultRoom)[0];
+  u2Room = Object.keys(io.sockets.manager.roomClients[users[u2].id]).filter(notDefaultRoom)[0];
   if (u1Room) {
     leaveRoom({room: u1Room, user: u1}, users[u1]);
   }

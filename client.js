@@ -138,6 +138,7 @@ function getUserInput() {
 }
 
 function writeMessage(contents, useColor) {
+  // looks ridiculous but necessary because useColor by default is undefined
   if (!(useColor === false)) {
     contents = '{blue-fg}' + contents + '{/blue-fg}';
   }

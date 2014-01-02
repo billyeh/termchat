@@ -17,6 +17,7 @@ var socket
   , scrollLock = false;
 
 getName();
+
 socket = io.connect('http://localhost:8000');//http://safe-eyrie-8054.herokuapp.com/');
 socket.on('connect', function(data) {
   socket.emit('connection');
@@ -248,7 +249,8 @@ function sendVideo(data) {
       }
       try {
         pixelr.read('image.jpeg', 'jpeg', function(image) {
-          socket.emit('send_frame', {user: username, other: data.other, pixels: asciize(image)});
+          socket.emit('send_frame', {user: username, other: data.other,
+                                     pixels: asciize(image, video.width, video.height)});
         });
       }
       catch(err) {

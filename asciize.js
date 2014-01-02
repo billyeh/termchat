@@ -1,4 +1,4 @@
-function asciize(image) {
+function asciize(image, width, height) {
   return '#####################\n';
 }
 

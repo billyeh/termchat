@@ -1,5 +1,5 @@
 var io = require('socket.io-client')
-  , prompt = require('prompt')
+  , termPrompt = require('prompt')
   , blessed = require('blessed')
   , pixelr = require('pixelr')
   , execute = require('child_process').exec
@@ -34,10 +34,10 @@ socket.on('validation', function(data) {
 });
 
 function getName() {
-  prompt.message = "";
-  prompt.delimiter = "";
-  prompt.start();
-  prompt.get(
+  termPrompt.message = "";
+  termPrompt.delimiter = "";
+  termPrompt.start();
+  termPrompt.get(
   {
     properties: {
       name: {

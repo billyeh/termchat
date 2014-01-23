@@ -1,5 +1,5 @@
 function asciize(image, width, height) {
-  return '#####################\n';
+  return '{red-fg}#####################\n';
 }
 
 exports.asciize = asciize;

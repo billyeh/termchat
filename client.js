@@ -18,7 +18,7 @@ var socket
 
 console.log('Connecting to server...');
 
-socket = io.connect('http://safe-eyrie-8054.herokuapp.com/');
+socket = io.connect('http://localhost:8000');//http://safe-eyrie-8054.herokuapp.com/');
 socket.on('connect', function(data) {
   socket.emit('connection');
   getName();
@@ -260,7 +260,7 @@ function sendVideo(data) {
       }
     });*/
     socket.emit('send_frame', {user: username, other: data.other,
-                              pixels: asciize(image, video.width, video.height)});
+                              pixels: asciize('', video.width, video.height)});
   }, 150);
 }
 

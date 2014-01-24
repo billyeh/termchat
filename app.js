@@ -41,6 +41,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('chat_request', function(data) {
+    delete requests['video'][data.user];
     console.log('Request to chat ' + data.other + ' from ' + data.user);
     if (!(data.other in users)) {
       socket.emit('no_user', {user: data.other});
@@ -52,6 +53,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('video_request', function(data) {
+    delete requests['chat'][data.user];
     console.log('Request to video chat ' + data.other + ' from ' + data.user);
     if (!(data.other in users)) {
       socket.emit('no_user', {user: data.other});

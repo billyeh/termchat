@@ -237,13 +237,13 @@ function receiveVideo() {
     win.render();
   }
   socket.on('receive_frame', function(data) {
-    video.setContent(video.getContent() + data.pixels);
+    video.setContent(data.pixels);
     win.render();
   });
 }
 
 function sendVideo(data) {
-  videoInterval = setInterval(function() {/*
+  videoInterval = setInterval(function() {
     execute('streamer -o image.jpeg', function(error, stdout, stderr) {
       if (error) {
         writeMessage('Error capturing video: ' + stderr);
@@ -258,9 +258,7 @@ function sendVideo(data) {
       catch(err) {
         writeMessage('Error reading video: ' + err);
       }
-    });*/
-    socket.emit('send_frame', {user: username, other: data.other,
-                              pixels: asciize('', video.width, video.height)});
+    });
   }, 150);
 }
 

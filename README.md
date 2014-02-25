@@ -1,4 +1,4 @@
-at
+Termchat
 =========
 
 Termchat is a chat client run from the terminal. It currently supports two-person text-only chat as well as video chat using ASCII frames.
@@ -10,24 +10,14 @@ This is me, in ASCII.
 ![Screenshot of chat screen](http://i59.tinypic.com/307p2kj.png)
 This is me alone in chat room. Lame, huh?
 
-Installation
+Installation and Running
 --------------
 
 ```sh
-git clone [git-repo-url] dillinger
-cd dillinger
-npm i -d
-mkdir -p public/files/{md,html,pdf}
-```
+git clone https://github.com/billyeh/termchat.git
+npm install
 
-##### Configure Plugins. Instructions in following README.md files
-
-* plugins/dropbox/README.md
-* plugins/github/README.md
-* plugins/googledrive/README.md
-
-```sh
-node app
+node client.js
 ```
 
 
